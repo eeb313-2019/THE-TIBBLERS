@@ -24,4 +24,5 @@ Primary method of contact: Facebook messenger
 - If you don’t get something done, get it done as soon as possible
 - Talk to the TAs if someone doesn’t meet deadlines consistently 
 - Be gentle and kind if you have a problem, communicate, try not to get offended 
+- Everyone needs to leave a comment indicating that the branch is good to merge for it to be merged
 
