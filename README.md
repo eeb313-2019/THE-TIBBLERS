@@ -1,9 +1,9 @@
 # Group_5
 
-##Introduction to the Project
+## Introduction to the Project
 
 
-##Project Description
+## Project Description
 
 What is the project about?
 
@@ -34,7 +34,7 @@ http://www.esapubs.org/archive/ecol/E089/051/metadata.htm provides a description
 The full data set can be found under 
 *C. Barnes, D. M. Bethea, R. D. Brodeur, J. Spitz, V. Ridoux, C. Pusineri, B. C. Chase, M. E. Hunsicker, F. Juanes, A. Kellermann, J. Lancaster, F. Ménard, F.-X. Bard, P. Munk, J. K. Pinnegar, F. S. Scharf, R. A. Rountree, K. I. Stergiou, C. Sassa, A. Sabates, and S. Jennings. 2008. Predator and prey body sizes in marine food webs. Ecology 89:881.*
 
-##Team Description
+## Team Description
 
 Natasha Djuric -- (The Natto) A botanical enthusiast sucked into the foreign world of fish and the bigger things that eat them.  Good at writing reports and making figures.
 
