@@ -4,7 +4,7 @@
   
   There will be a trend of larger predators consuming larger prey. 
   
-- **Does the same species of predator in different geographic locations exhibit the same feeding pattern? Are they eating the same size prey in different locations?**
+- **Does the same species of predator in different geographic locations exhibit the same feeding pattern? Are they eating the same sizes of prey in different locations?**
   
   Locations with more similar environmental factors will have predators exhibiting similar feeding preferences. 
   
@@ -12,7 +12,7 @@
 
   Different locations will exhibit different patterns in predator and prey size. 
 
-
 - **Do environmental factors (depth, mean annual temperature, mean primary productivity, specific habitat) influence feeding intractions or predator and prey size relationships (mass, length, fork length)?**
+
  In areas in which environmental factors are similar, feeding interactions and predator/prey size relationships will show similar trends. 
 
