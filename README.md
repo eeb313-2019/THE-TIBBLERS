@@ -2,10 +2,18 @@
 
 ## Introduction to the Project
 
+Our group is interested in the factors influencing the dynamics between predator and prey on a global scale. Specifically, we are interested in how the behaviour of predators of the same species might be influenced by the environmental and geographic variables imposed on them, leading to differences in the size or species of prey that they consume. Our goal is to gain a greater appreciation of how the environment might cause the same species to behave or look differently (ie ecology is c00l??).
 
-## Project Description
 
-What is the project about?
+## Data Description
+
+The authors collated a wide variety of marine predator and prey size data from the literature to create a single data set containing 34931 observations from 27 marine locations representing diverse environmental conditions across the globe. Predator sizes range from 0.1 mg to over 415 kg and prey sizes are as small as 75 pg to over 4.5 kg. Previous analyses focus on small numbers of species with similar sizes, and thus may not have represented trends in other locations. Thus, the data set is intended to address interactions of species and size classes in food webs over a larger size range and considering a greater number of species compared to previous analyses. Prey characteristics were largely assessed from stomach contents of predators, and where their size or mass could not be measured a regression equation was used for mass–length conversion.
+
+http://www.esapubs.org/archive/ecol/E089/051/metadata.htm provides a description for every variable
+
+The full data set can be found under 
+*C. Barnes, D. M. Bethea, R. D. Brodeur, J. Spitz, V. Ridoux, C. Pusineri, B. C. Chase, M. E. Hunsicker, F. Juanes, A. Kellermann, J. Lancaster, F. Ménard, F.-X. Bard, P. Munk, J. K. Pinnegar, F. S. Scharf, R. A. Rountree, K. I. Stergiou, C. Sassa, A. Sabates, and S. Jennings. 2008. Predator and prey body sizes in marine food webs. Ecology 89:881.*
+
 
 -likely using environmental variables.
 -standardized variables (names: predator.standard.length or standardized.predator.length???   )
@@ -21,18 +29,6 @@ What is the project about?
 
 
 *GEOGRAPHIC VARIABLES*
-
-
-
-*Description of the Data*
-
-
-The authors collated a wide variety of marine predator and prey size data from the literature to create a single data set containing 34931 observations from 27 marine locations representing diverse environmental conditions across the globe. Predator sizes range from 0.1 mg to over 415 kg and prey sizes are as small as 75 pg to over 4.5 kg. Previous analyses focus on small numbers of species with similar sizes, and thus may not have represented trends in other locations. Thus, the data set is intended to address interactions of species and size classes in food webs over a larger size range and considering a greater number of species compared to previous analyses. Prey characteristics were largely assessed from stomach contents of predators, and where their size or mass could not be measured a regression equation was used for mass–length conversion.
-
-http://www.esapubs.org/archive/ecol/E089/051/metadata.htm provides a description for every variable
-
-The full data set can be found under 
-*C. Barnes, D. M. Bethea, R. D. Brodeur, J. Spitz, V. Ridoux, C. Pusineri, B. C. Chase, M. E. Hunsicker, F. Juanes, A. Kellermann, J. Lancaster, F. Ménard, F.-X. Bard, P. Munk, J. K. Pinnegar, F. S. Scharf, R. A. Rountree, K. I. Stergiou, C. Sassa, A. Sabates, and S. Jennings. 2008. Predator and prey body sizes in marine food webs. Ecology 89:881.*
 
 ## Team Description
 
