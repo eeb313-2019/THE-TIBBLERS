@@ -10,7 +10,7 @@
   
 - **Does geography (latitude, longitude, geographic location, specific habitat) influence predator and prey sizes (mass or length ratios)?**
 
-  We predict that because different locations will exhibit different patterns in the relationship between predator and prey size. 
+  We predict that different locations will exhibit different patterns in the relationship between predator and prey size. 
 
 - **Do environmental factors (depth, mean annual temperature, mean primary productivity, specific habitat) influence feeding intractions or predator and prey size relationships (mass, length, fork length)?**
   
