@@ -1,7 +1,7 @@
-# GROUP NAME: The Tibblers
+# Group Name: The Tibblers
 
 
-# PROJECT SETUP
+## Project Setup
 ROLES
 Week 1:
 RECORDER: NATASHA D
@@ -10,7 +10,7 @@ LEADER: NATASHA S
 FLOATER: DIANA
 - Each week onwards we will cycle through them
 
-# CODE OF CONDUCT
+## Code of Conduct
 Primary method of contact: Facebook messenger
 - Using google docs to keep track of roles, and progress
 - Consensus 
