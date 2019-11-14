@@ -6,7 +6,7 @@
   
 - **Does the same species of predator in different geographic locations exhibit the same feeding pattern? Are they eating the same sizes of prey in different locations?**
   
-  We'd expect the species of prey available to a certain species of predator to vary across space. This might cause changes in the predator-prey size/taxon relationship as prey availability differs. For example, Albacore living off different continental shelves around the world do not all have access to the same prey. Some might feed on Pearlside, while others on Atlantic saury. Given this information, we'd predict that Albacore living off continental shelves closer to one another will eat more similar species of a more similar size.. 
+  We'd expect the species of prey available to a certain species of predator to vary across space. This might cause changes in the predator-prey size/taxon relationship as prey availability differs. For example, Albacore living off different continental shelves around the world do not all have access to the same prey. Some might feed on Pearlside, while others on Atlantic saury. Given this information, we'd predict that Albacore living off continental shelves closer to one another will eat more similar species of a more similar size.
   
 - **Does geography (latitude, longitude, geographic location, specific habitat) influence predator and prey sizes (mass or length ratios)?**
 
