@@ -27,7 +27,4 @@ Diana Nakib -- (Dianasaur) Immunology Specialist/EEB Major. Nice hair. Good at s
 Evy Duranyik -- (The Bird Babe) Honestly loves birds so much she might turn into one. Willing to help wherever she's needed because that's the kind of gal she is.
 
 We will rotate roles at the beginning of every week, with the initial order being:
-RECORDER: NATASHA D
-ORGANIZER: EVELIN
-LEADER: NATASHA S
-FLOATER: DIANA
+RECORDER: NATASHA D    ORGANIZER: EVELIN     LEADER: NATASHA S   FLOATER: DIANA
