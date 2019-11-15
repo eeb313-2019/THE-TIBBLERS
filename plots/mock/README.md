@@ -12,8 +12,8 @@ Caption:
 2. Box plot representing the range of prey size of specific predators in specific geographic locations 
 
 -Does geography (latitude, longitude, geographic location, specific habitat) influence predator and prey sizes (mass or length ratios)?
-Caption:
 
+Caption:
 Bar plot representing predator:prey mass ratios in different geographic locations 
 
 -Do environmental factors (depth, mean annual temperature, mean primary productivity, specific habitat) influence feeding interactions or predator and prey size relationships (mass, length, fork length)?
