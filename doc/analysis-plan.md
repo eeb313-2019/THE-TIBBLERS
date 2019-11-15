@@ -18,17 +18,17 @@ Since our project hypothesis is likely going to revolve around differences acros
 
 Once we have a better idea of how our variables relate to each other across space, we will perform model selection. We can use AICc testing to determine what model best represents our variable relationships.
 
-We may also employ permutation tests if we find that our data is not normally distributed.
+We may also employ permutation tests if we find that our data is not normally distributed, or in the case that we cannot use a t-test if the variance of variables between groups is not equal and thus violates the t-test assumption of equal variance.
 
 # Possible results tables
 
-Our PCA test will output a table output that includes PCA columns and coordinates.
+Our PCA test will output a table that includes PCA columns and coordinates.
 
 Our Moran’s I tests will output p-values which we will use to determine if there is autocorrelation.
 
 From our model selection, we will get a table of AICc values which we will use to determine which model is best (lowest AICc value).
 
-Permuation tests will output tables that give statistical values (t-test, p-values, etc.).
+Permutation tests will output tables that give statistical values (t-test, p-values, etc.).
 
 # Possible results figures
 
