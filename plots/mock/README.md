@@ -21,6 +21,6 @@ Bar plot representing predator:prey mass ratios in different geographic location
 Caption: 
 Line graph depicting how a range of an environmental factors affect predator size 
 
-5. PCA:
+5. PCA: For relating environmental, geographic, and biological variables to identify potentially important relationships
 
-Caption: Principal component analysis demonstrating the potential sources of differences between sites through relationships between biological and environmental variables.
+Caption: Principal component analysis demonstrating the potential sources of differences between sites through relationships between biological, geographic, and environmental variables.
