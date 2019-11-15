@@ -22,4 +22,5 @@ Caption:
 Line graph depicting how a range of an environmental factors affect predator size 
 
 5. PCA:
+
 Caption: Principal component analysis demonstrating the potential sources of differences between sites through relationships between biological and environmental variables.
