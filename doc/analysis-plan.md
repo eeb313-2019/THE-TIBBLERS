@@ -1,4 +1,4 @@
-## Data cleaning
+# Data cleaning
 
 In order to make our data set more manageable and clear, we will employ the following data cleaning plan. First, we will remove any variables in our data set that are repetitive, non-standardized, or have questionable explanations as to how they were determined. Such variables include: Standardized_predator_length, Prey_conversion_to_length_method, and Prey_conversion_to_length_reference. 
 
