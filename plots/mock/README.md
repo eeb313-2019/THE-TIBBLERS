@@ -19,7 +19,7 @@ Bar plot representing predator:prey mass ratios in different geographic location
 4. Do environmental factors (depth, mean annual temperature, mean primary productivity, specific habitat) influence feeding interactions or predator and prey size relationships (mass, length, fork length)?
 
 Caption: 
-Line graph depicting how a range of an environmental factors affect predator size 
+Line graph depicting the variation in predator size across the range of a given environmental factor
 
 5. PCA: For relating environmental, geographic, and biological variables to identify potentially important relationships
 
