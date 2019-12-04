@@ -1,0 +1,324 @@
+---
+title: "Cleaning up the data set"
+author: "Natasha Djuric"
+date: "November 23, 2019"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+###Set Up
+Setting working directory and loading packages and data frames
+```{r}
+
+# 1. SETTING WORKING DIRECTORY
+setwd("D:/Third Year/EEB313/Project")
+
+# 2. LOADING PACKAGES
+library(tidyverse) 
+library(dplyr)
+
+# 3. LOADING FILES
+
+#MAIN, RAW DATA SET containing compilation from different studies
+fishraw <- read.delim("Predator_and_prey_body_sizes_in_marine_food_webs_vsn4.txt") 
+
+#SUMMARY OF CHARACTERISTICS FROM EACH PAPER (paper name, paper age, sample size, location)
+summary <- read_csv("Paper_Summary.csv")
+
+```
+
+###Investigating the fish data
+###MAIN CHANGES:
+
+-Every data frame name (fish_filtered_1, fish_filtered_2...) will correspond to one code chunk 
+in which a specific type of cleaning was done.
+
+1. Remove unwanted variables (notably any standardized variable columns and the associated 
+columns listing strategies with standardizing them)
+
+2. Keep ectothermic vertebrate data and remove cephalopods because there wasn't a large 
+enough and diverse enough sample size of cephalopods to make a comparison between the groups.
+
+3. Rename incongruous level names (due to typos, spelling differences) of the 
+Specific.habitat factor that actually represent the same type of habitat
+
+4. Keeping all years, even though they cover a wide temporal range of 50 years, 
+unless we find a specific study to be inexplicably anomalous, because we don't want to throw out data unnecessarily.
+
+5. Convert all measurements into a single unit type and remove the units column 
+(all lengths in cm, all masses in g for easier analysis)
+
+6. Sort data by quality, specifically removing any "Unsuitable" measurements 
+with a quality rating of 5.
+
+7. Converted Lat/Long data into degree format to make mapping and converting 
+into a csv easier.
+```{r}
+#Many unnecessary/vague variables.
+colnames(fishraw)
+```
+
+
+```{r}
+
+# There are no NAs according to this output. However, upon visual inspection 
+#it seems like some actually exist but have been labelled as "n/a" 
+#so they aren't showing up. It looks like the n/a are only in columns we aren't keeping anyway, so we'll
+# worry about them if they appear in the near-complete data frame.
+any(is.na(fishraw))
+
+```
+
+###Selecting columns of interest
+```{r}
+#Selecting all the columns we want to keep and saving them into a new object:
+
+#Removed all standardized columns because different papers 
+#performed standardization in different ways,
+#and their exact methods were hard to determine.
+#We prefer to make our own standardized column,
+#if necessary, from the raw measurements.
+
+fish_filtered_1 <- fishraw %>% 
+  dplyr::select(c(Record.number, Individual.ID, Predator, Predator.common.name, 
+                  Predator..taxon, 
+           Predator.lifestage, Type.of.feeding.interaction,
+           Predator.length, Predator.length.unit, Predator.dimension.measured,
+           Predator.fork.length, Predator.total.length,
+           Predator.quality.of.length.mass.conversion, Predator.mass, 
+           Predator.mass.unit, Prey.length, Prey.length.unit, Prey.mass, 
+           Prey.mass.unit, Geographic.location, Latitude, Longitude, Depth,
+           Mean.annual.temp, Depth, Mean.PP, SD.PP, SD.annual.temp, Reference, 
+           Specific.habitat, Notes...assumptions,Prey.quality.of.conversion.to.length, 
+           Prey.quality.of.conversion.to.mass, Predator.quality.of.length.mass.conversion, 
+           Prey.dimension.measured, Prey.common.name, Prey.taxon, Prey))
+
+
+# Most of the predators are ectothermic vertebrates. We decided to remove 
+# cephalopod observations and focus on ectothermic vertebrates, especially since 
+# most of the cephalopods came from one paper and it would be hard to tease apart
+# specific environmental effects and sampling method from the results, and there
+# are no other cephalopods to compare to. 
+
+fish_filtered_1<-fish_filtered_1 %>%
+  filter(Predator..taxon != "cephalopod") 
+
+```
+
+
+###Unit conversions
+
+-Converting all predator and prey lengths to cm
+-Converting all prey mass to g.
+-All predator mass in g already.
+-Once finished, removed the unit columns.
+
+```{r}
+fish_filtered_2<-fish_filtered_1 %>% 
+  mutate(Predator.length = case_when(
+    Predator.length.unit == "mm" ~ Predator.length / 10,
+    Predator.length.unit == "µm" ~ Predator.length / 10000,
+    TRUE ~ Predator.length 
+  )) %>% 
+  mutate(Prey.mass = case_when(
+    Prey.mass.unit == "mg" ~ Prey.mass / 1000,
+    TRUE ~ Prey.mass
+  )) %>% 
+  mutate(Prey.length=case_when(
+    Prey.length.unit=="mm"~Prey.length/10,
+    Prey.length.unit=="µm"~Prey.length/10000,
+    TRUE~Prey.length
+  )) %>% 
+  select(c(-Prey.mass.unit, -Predator.length.unit, -Predator.mass.unit, -Prey.length.unit))
+
+```
+
+###Renaming repetitive levels of factors
+
+1. Habitats, feeding interactions, predator lifestage
+
+We gave common habitats the same level name if they had slightly 
+different spelling, capitalization, or wording.
+
+```{r}
+#Renaming similar habitats, capitalizing feeding interactions and predator
+#lifestages for consistency
+
+fish_filtered_3 <-fish_filtered_2 %>% 
+  mutate(Specific.habitat=recode(Specific.habitat, "Coastal bay"="Coastal Bay", 
+                                 "Nearshore waters" = "Nearshore", "nearshore"="Nearshore", 
+                                 "shelf"="Shelf", "inshore"="Inshore", 
+                                 "transition region"="Transition",
+                                 "shelfbreak/open ocean"="Shelfbreak/Open Ocean", 
+                                 "estuary/coastal"="Estuary/Coastal", 
+                                 "offshelf and on shelf"="Off/On Shelf",
+                                 "open ocean"="Open Ocean", 
+                                 "demersal food web"="Sea Floor")) %>% 
+  mutate(Predator.lifestage=recode(Predator.lifestage, "adult"="Adult",
+                                   "juvenile"="Juvenile", "larva"="Larva")) %>% 
+  mutate(Type.of.feeding.interaction = recode(Type.of.feeding.interaction,
+                                              "planktivorous" = "Planktivorous", 
+                                              "piscivorous" = "Piscivorous", 
+                                              "predacious"="Predacious"))
+
+```
+
+###Removing data with low quality
+
+We will also consider the conversion quality of the columns
+Predator_quality_of_length_mass_conversion, Prey_quality_of_conversion_to_length, 
+Prey_quality_of_conversion_to_mass, and remove data with a quality rating of 5
+(quality is ranked on a scale: 0 = mass measured, 1 = species regression, 2 = genus regression, 
+3 = family regression, 4 = general shape, 5 = unsatisfactory).
+
+We kept 0-4 so as not to lose too much data, and we were satisfied 
+with the different levels as long as we later account for them in analysis.
+
+```{r}
+
+fish_filtered_4<-fish_filtered_3 %>% 
+  filter(Prey.quality.of.conversion.to.length %in% 0:4,
+         Prey.quality.of.conversion.to.mass %in% 0:4, 
+         Predator.quality.of.length.mass.conversion %in% 0:4) 
+  
+```
+
+
+### Converting NSEW latitude/longitude coordinates into degrees 
+
+-When the data gets exported to a csv, NSEW coordinates do not render properly.
+-We convert them to degree format instead.
+-Our initial use of calculations to convert NSEW to degrees 
+did not give accurate conversions, so we
+manually inputted them into Google Earth to be safe and included those values below.
+
+
+```{r}
+####Converting Coordinates to Decimal Degrees 
+
+# convert latitude and longitude to character vectors 
+fish_filtered_5 <- fish_filtered_4 %>% 
+  mutate(Latitude = as.character(Latitude), Longitude = as.character(Longitude))
+
+### Conversion of Longitude and Latitude to Decimal Degrees ###
+
+# Apalachicola Bay, Florida
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "29º40'N"] <- 29.67
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "85º10'W"] <- -85.17
+
+# Gulf of Alaska
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "56º50'N"] <- 56.83
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "156º00'W"] <- -156.00
+
+# Jeffreys Ledge, Gulf of Maine, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "42º80'N"] <- 43.33
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "70º10'W"] <- -70.17
+
+# Stellwagen Bank, Gulf of Maine, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "42º40'N"] <- 42.67
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "70º15'W"] <- -70.25
+
+# Cape Cod Bay, Gulf of Maine, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "41º86'N"] <- 42.43
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "70º42'W"] <- -70.70
+
+# Great Channel South, Gulf of Maine, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "41º71'N"] <- 42.18
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "69º76'W"] <- -69.76
+
+# South of Marthas Vineyard, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "41º08'N"] <- 41.13
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "71º37'W"] <- -71.62
+
+# Gulf of Maine, New England
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "42º79'N"] <- 43.32
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "69º51'W"] <- -69.85
+
+# Andaman Sea (West of South Thailand)
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "08º24'N"] <- 8.40
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "97º53'E"] <- 97.88
+
+# NE North Sea and Skaggerak
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "57º00'N"] <- 57.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "08º00'E"] <- 8.00
+
+# W Greenland
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "66º20'N"] <- 66.33
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "56º00'W"] <- -56.00
+
+# French Polynesian EEZ
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "12º00'S"] <- -12.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "144º00'W"] <- -144.00
+
+# Catalan Sea
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "40º55'N"] <- 40.92
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "02º40'E"] <- 2.67
+
+# Western North Pacific
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "37º00'N"] <- 37.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "143º00'E"] <- 143.00
+
+# Atlantic Ocean
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "40º00'N"] <- 40.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "71º00'W"] <- -71.00
+
+# Off the Bay of Biscay (Depth = 4562)
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "45º00'N"] <- 45.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "18º00'W"] <- -18.00
+
+# Off the Bay of Biscay (Depth = 3798)
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "44º00'N"] <- 44.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "16º00'W"] <- -16.00
+
+# Great South Bay, Long Island, New York
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "40º10'N"] <- 40.17
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "73º10'W"] <- -73.17
+
+# Strait of Georgia
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "49º00'N"] <- 49.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "123º00'W"] <- -123.00
+
+# Europe, Celtic Sea ecosystem
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "50º50'N"] <- 50.83
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "08º00'W"] <- -8.00
+
+# Antarctic Peninsula (Depth = 881)
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "63º00'S"] <- -63.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "58º00'W"] <- -58.00
+
+# Antarctic Peninsula (Depth = 1752)
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "62º00'S"] <- -62.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "55º00'W"] <- -55.00
+
+# Oxwich Bay, Wales
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "51º52'N"] <- 51.87
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "04º10'W"] <- -4.17
+
+# Greenland 
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "60º00'N"] <- 60.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "40º00'W"] <- -40.00
+
+# Eastern Mediterranean
+fish_filtered_5$Latitude[fish_filtered_5$Latitude == "38º00'N"] <- 38.00
+fish_filtered_5$Longitude[fish_filtered_5$Longitude == "23º00'E"] <- 23.00
+
+
+```
+
+
+###Mass ratio calculation and log conversion
+```{r}
+fish_filtered_6<-fish_filtered_5 %>% 
+  mutate(massratio=(Predator.mass/Prey.mass)) %>% 
+  mutate(massratiolog=log10(massratio)) 
+```
+
+###Exporting cleaned up data to a csv
+```{r}
+#dir.create("data-processed")
+#write_csv(fish_filtered_6, "data-processed/fish_clean_final.csv")
+
+```
