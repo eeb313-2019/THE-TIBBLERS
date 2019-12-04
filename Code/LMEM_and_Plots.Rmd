@@ -150,7 +150,8 @@ mixed_model_saturated <- lmer(logpredmass ~ Mean_PP_Standardized +
                                 Predator.lifestage + Type.of.feeding.interaction + 
                                 Prey.mass.standardized + 
                                 Predator.lifestage:Type.of.feeding.interaction +
-                                Predator.quality.of.length.mass.conversion + (1|Predator.common.name)+(1|Geographic.location),  
+                                Predator.quality.of.length.mass.conversion +
+                                (1|Predator.common.name)+(1|Geographic.location),  
                               data=fish_filter, REML=FALSE)
 ```
 
@@ -170,7 +171,8 @@ STEP 2: OPTIMIZING RANDOM EFFECTS STRUCTURE
 mixed_model_saturated_True<-lmer(logpredmass ~ Mean_PP_Standardized + 
                                    Predator.lifestage + Type.of.feeding.interaction + 
                                    Prey.mass.standardized + 
-                                   Predator.lifestage:Type.of.feeding.interaction + Predator.quality.of.length.mass.conversion +  
+                                   Predator.lifestage:Type.of.feeding.interaction + 
+                                   Predator.quality.of.length.mass.conversion +  
                                    (1|Predator.common.name)+
                                    (1|Geographic.location),  
                                  data=fish_filter, REML=TRUE)
@@ -208,7 +210,8 @@ compare different fixed-effect structures.
 mixed_model_interactions_no_PP<-lmer(logpredmass ~ Predator.lifestage
                                      + Type.of.feeding.interaction +
                                        Prey.mass.standardized + 
-                                       Predator.lifestage:Type.of.feeding.interaction + Predator.quality.of.length.mass.conversion + 
+                                       Predator.lifestage:Type.of.feeding.interaction + 
+                                       Predator.quality.of.length.mass.conversion + 
                                        (1|Predator.common.name)+
                                        (1|Geographic.location), 
                                      data=fish_filter, REML=FALSE)
@@ -236,7 +239,9 @@ mixed_model_no_interactions<-
 #No interactions or Mean_PP
 mixed_model_no_interactions_no_PP<-
   lmer(logpredmass ~ Predator.lifestage + Type.of.feeding.interaction + 
-         Prey.mass.standardized +  Predator.quality.of.length.mass.conversion + (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
+         Prey.mass.standardized +  
+         Predator.quality.of.length.mass.conversion + 
+         (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
 
 #No interactions or Predator.lifestage
 mixed_model_no_interactions_no_lifestage<-
@@ -249,7 +254,8 @@ mixed_model_no_interactions_no_lifestage<-
 #No interactions or type of feeding interaction
 mixed_model_no_interactions_no_feeding<-
   lmer(logpredmass ~ Mean_PP_Standardized + Predator.lifestage + 
-         Prey.mass.standardized + Predator.quality.of.length.mass.conversion + (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
+         Prey.mass.standardized + Predator.quality.of.length.mass.conversion +
+         (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
 
 #No interactions or Prey.mass.standardized
 mixed_model_no_interactions_no_preymass<-
@@ -352,7 +358,8 @@ PLOTTING FEEDING INTERACTION
  ggplot(fish_filter,aes(x=Type.of.feeding.interaction, y=logpredmass)) +
   geom_boxplot()+
   theme_classic() +labs(y="Log (Predator mass)",
-                        x="Predator Feeding Interaction")+ scale_x_discrete(limits=c("Planktivorous","Piscivorous","Predacious"))         
+                        x="Predator Feeding Interaction")+
+                        scale_x_discrete(limits=c("Planktivorous","Piscivorous","Predacious"))         
                                            
 
 # ggsave("FeedingInteraction_LogPredMass.jpg", plot = last_plot(), 
