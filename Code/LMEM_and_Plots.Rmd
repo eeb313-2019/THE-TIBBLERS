@@ -369,4 +369,23 @@ PLOTTING FEEDING INTERACTION
 
 
 ```
+PLOTTING THE INTERACTION BETWEEN LIFESTAGE AND FEEDING INTERACTION 
 
+```{r}
+fish_filter %>%
+filter(Predator.lifestage != "Larva", Type.of.feeding.interaction != "planktivorous") %>%
+group_by(Predator.lifestage, Type.of.feeding.interaction) %>%
+summarise(meanlogpredmass = mean(logpredmass), n_obs = n(),
+se_mass = (meanlogpredmass/sqrt(n_obs))) %>%
+ggplot()+
+aes(x = Predator.lifestage, y = meanlogpredmass, colour = Type.of.feeding.interaction)+
+geom_line(aes(group=Type.of.feeding.interaction))+
+geom_errorbar(aes(ymin = (meanlogpredmass-se_mass), ymax = (meanlogpredmass + se_mass)),
+width = 0.05)+
+geom_point()+
+labs(x = "Predator Lifestage", y = "Mean of Log Predator Mass",
+colour = "Type of Feeding Interaction")+
+scale_x_discrete(limits = c("Juvenile", "Adult"))+
+scale_colour_manual(values = c("midnightblue", "orangered"))+
+theme_classic()
+```
