@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+author: "Evelin Duranyik"
+output: html_notebook
+---
+# SETTING UP DATA
+
+```{r}
+# load packages 
+library(tidyverse)
+library(MASS) 
+library(nlme) 
+library(sp) 
+library(ape)
+library(rgdal) # R Geospatial Data Abstraction Library 
+library(raster) 
+library(maps) 
+library(viridis)
+
+# load data
+getwd()
+setwd("C:/Users/evy/Documents/Fourth Year/EEB313/Project")
+fish_clean <- read.csv("fish_clean_4.csv")
+
+# create standardized Mean.PP variable
+fish_clean<-fish_clean %>% 
+  mutate(Mean.PP.Standardized = Mean.PP/SD.PP)
+
+# create variables for mean predator and prey length, and mass ratio per site
+mean.per.site <- fish_clean %>% 
+  group_by(Latitude, Longitude) %>% 
+  summarise(mean.pred.mass = mean(Predator.mass)) 
+
+# clean data - retain one row per site 
+fish_clean_distinct <- fish_clean %>%
+  distinct(., Latitude, Longitude, .keep_all = TRUE)
+
+# merge mass means per site to distinct data set 
+fish_clean_distinct <- merge(fish_clean_distinct, mean.per.site, by.x = c("Latitude","Longitude"),
+                             by.y = c("Latitude", "Longitude"))
+
+```
+
+# CREATING MAP
+
+```{r}
+# turn numeric points into spatial points
+coord.fish <- SpatialPoints(cbind(fish_clean_distinct$Longitude, fish_clean_distinct$Latitude),
+                            proj4string=CRS("+proj=longlat +ellps=WGS84"))
+
+# use sinusoidal projection 
+sinu.fish <- spTransform(coord.fish, 
+                         CRS("+proj=sinu +ellps=WGS84"))
+
+# add to dataframe
+fish_clean_distinct <- bind_cols(fish_clean_distinct, as.data.frame(sinu.fish))
+
+# pull map data 
+map.world <- map_data("world")
+
+# plot 
+ggplot()+
+  geom_polygon(data = map.world, aes(x=long, y=lat, group=group), fill=NA, colour="gray85") +
+  coord_fixed() +
+  geom_point(data=fish_clean_distinct, aes(x=Longitude, y=Latitude, colour=Mean.PP,
+                                           size = mean.pred.mass), alpha = 0.45)+
+  scale_colour_viridis(name = "Mean Primary Productivity (mg C·m^-2·day^-1)", 
+                       option = "plasma")+
+  scale_size_continuous(name = "Mean Predator Mass (g)", range = c(2, 6))+
+  labs(x = "Longitude", y = "Latitude")+
+  theme_bw()
+```
+
+# CALCULATING MORAN's AUTOCORRELATION COEFFICIENT
+
+```{r}
+# Check distribution of data
+ggplot(fish_clean_distinct, aes(x = mean.pred.mass))+
+  geom_histogram()
+
+ggplot(fish_clean_distinct, aes(x = log(mean.pred.mass)))+
+  geom_histogram()
+
+### data not normally distributed! 
+
+# distance matrix 
+dist.matrix.fish <- as.matrix(dist(data.frame(sinu.fish)))
+
+# reciprocal of each number 
+inv.dist.fish <- 1/dist.matrix.fish
+
+# replace diagonal with 0 
+diag(inv.dist.fish) <- 0
+
+# calculate Moran's I for MPP and mean predator mass
+Moran.I(fish_clean_distinct$Mean.PP.Standardized, inv.dist.fish, alternative = "two.sided")
+
+Moran.I(fish_clean_distinct$mean.pred.mass, inv.dist.fish, alternative = "two.sided")
+```
+
+# CONSTRUCTING A SEMIVARIOGRAM
+
+```{r}
+# add coordinates to distinct dataframe
+fish_clean_distinct <- bind_cols(fish_clean_distinct, as.data.frame(sinu.fish))
+
+# construct variogram
+mod <- gls(Mean.PP.Standardized ~ log(mean.pred.mass), data = fish_clean_distinct, method = "ML")
+
+# plot
+plot(Variogram(mod, form = ~coords.x1+coords.x2, resType = "normalized")) 
+
+```
+

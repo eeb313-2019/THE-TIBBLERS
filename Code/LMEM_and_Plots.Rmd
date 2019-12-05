@@ -1,0 +1,391 @@
+---
+title: "Linear Mixed Effect Model Selection and Plotting the Results"
+author: "Natasha Djuric"
+output:
+  html_document:
+    df_print: paged
+---
+
+###LINEAR MIXED EFFECTS MODEL SELECTION
+
+-We're going to avoid including factors with too many levels as fixed effects
+-Make a series of models with diff fixed and random effects, use AIC to distinguish them
+
+```{r}
+# SET UP 
+
+#Loading packages
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(MuMIn)
+
+#Cleaned up data
+fish<-read_csv("fish_clean_final.csv")
+
+```
+
+Prey quality may influence our interpretation of prey mass effects on log predator mass. 
+When we do an ANOVA, we see that different prey qualities have  different log predator masses. 
+To maintain statistical power, we will use all data with a prey quality of 4 
+because it has the highest sample size and we are comfortable with using "general shape" 
+for prey mass, in order to predict predictor mass.
+
+```{r}
+#We're only going to focus on a prey quality of 4 (general shape)
+fish_filter <- fish %>%
+ filter(Prey.quality.of.conversion.to.mass == "4" ) 
+
+#Note for model analysis: There are no predator qualities of 
+#0 that also have a prey quality of 4
+table(fish$Prey.quality.of.conversion.to.mass, 
+      fish$Predator.quality.of.length.mass.conversion)
+
+```
+
+###STANDARDIZING 
+
+"It is good practice to standardise your explanatory variables 
+before proceeding so that they have a mean of zero (“centering”) 
+and standard deviation of one (“scaling”). It ensures that 
+the estimated coefficients are all on the same scale, 
+making it easier to compare effect sizes" 
+- from https://ourcodingclub.github.io/2017/03/15/mixed-models.html. 
+
+For our Mean PP (Primary Productivity) variable, there is only 
+one value for each geographic location. The authors provided the standard deviation for 
+each mean value in a second column. 
+
+```{r}
+#Standardizing mean PP by dividing by the standard deviation
+fish_filter<-fish_filter %>% 
+  mutate(Mean_PP_Standardized= Mean.PP/SD.PP)
+
+
+#Standardizing prey mass
+fish_filter<-fish_filter %>% 
+  mutate(Prey.mass.standardized = scale(Prey.mass, center=TRUE, scale=TRUE))
+```
+
+###CHECKING ASSUMPTIONS OF LMEM
+
+*Normality at each X and homogeneity of variances at each X:*
+Not that important with our large sample size, 
+but log10 is more normal so we will use it.
+
+```{r}
+
+hist(x=(fish_filter$Predator.mass))
+hist(x=log10(fish_filter$Predator.mass))
+
+#Converting predator mass to log mass for normality
+fish_filter<-fish_filter %>% 
+  mutate(logpredmass = log10(Predator.mass))
+```
+*Fixed X*
+
+All our predictors are in the range of values we'd expect. Standardized prey mass 
+has many negative values, so we can't do a log transformation, 
+but as explanatory variables they 
+do not need to be normally distributed regardless. 
+From 
+https://www.theanalysisfactor.com/the-distribution-of-independent-variables-in-regression-models/
+
+```{r}
+ggplot(fish_filter, aes(x=Mean_PP_Standardized))+geom_histogram()
+ggplot(fish_filter, aes(x=Geographic.location, y=Mean_PP_Standardized))+geom_boxplot()
+
+#Standardized prey mass
+ggplot(fish_filter, aes(x=(Prey.mass.standardized)))+geom_histogram()
+
+```
+
+*Independence of observations:*
+Some of the fish come from the same stomach. However, we don't need to nest the 
+data by record ID because we're interested in predicting Predator mass, not Prey mass. 
+We should, however, nest the predators within geographic location for several reasons: 
+in some instances, predators were not a random sample from the geographic location. 
+Also, each "Geographic.location" acts as a proxy for the year and sampling methods of a study,
+and is our best way for accounting for spatial autocorrelation.
+
+Therefore, going to add (1|Geographic.location) as a random effect to account for non-independence.
+
+*Controling for quality*
+```{r}
+
+# #LMEMs sometimes have a hard time estimating random effect components 
+# when the random effects have too few levels (i.e., < 5 or 6). 
+# In fact, when we included Predator.quality as a random effect (4 levels),
+# the model could not estimate the variance. Therefore, we will use 
+#Predator quality as a fixed effect without interpreting its coefficients
+#because we know different predator qualities have significantly different
+# predator masses (ANOVA), also visible in histograms below.
+
+#Converting quality to factor
+fish_filter$Predator.quality.of.length.mass.conversion<-
+  as.factor(fish_filter$Predator.quality.of.length.mass.conversion)
+
+ggplot(fish_filter, aes(y=logpredmass, 
+                        x=Predator.quality.of.length.mass.conversion))+geom_boxplot()
+
+
+
+#Reducing levels of lifestage to remove ambiguity
+fish_filter<-fish_filter %>% 
+filter(Predator.lifestage !="larva / juvenile",
+       Predator.lifestage != "postlarva", Predator.lifestage !="postlarva/juvenile") 
+
+```
+STEP 1: SATURATED MODEL
+
+-Predator taxon cannot be a fixed effect. There are too many levels and it won't run.
+-It is best to encode as random effect.
+-We don't care about how specific predators are related to prey anyway -- 
+all we care about are general trends. Given that we're asking about
+the general relationship between size and feeding interaction, age, etc, 
+species are really just a random effect anyway: we are pulling out general trends.
+
+```{r}
+mixed_model_saturated <- lmer(logpredmass ~ Mean_PP_Standardized + 
+                                Predator.lifestage + Type.of.feeding.interaction + 
+                                Prey.mass.standardized + 
+                                Predator.lifestage:Type.of.feeding.interaction +
+                                Predator.quality.of.length.mass.conversion +
+                                (1|Predator.common.name)+(1|Geographic.location),  
+                              data=fish_filter, REML=FALSE)
+```
+
+
+STEP 2: OPTIMIZING RANDOM EFFECTS STRUCTURE 
+
+```{r}
+# #Leave mass conversion random effect in all models because the 
+# response variable was calculated using this factor.
+# #Predator species has to stay in the model because the 
+# researchers specifically 
+# #sought these species, they aren't a random sample from
+# that environment. 
+
+#We have only non-independent random effects at this point: nothing we can remove.
+
+mixed_model_saturated_True<-lmer(logpredmass ~ Mean_PP_Standardized + 
+                                   Predator.lifestage + Type.of.feeding.interaction + 
+                                   Prey.mass.standardized + 
+                                   Predator.lifestage:Type.of.feeding.interaction + 
+                                   Predator.quality.of.length.mass.conversion +  
+                                   (1|Predator.common.name)+
+                                   (1|Geographic.location),  
+                                 data=fish_filter, REML=TRUE)
+
+
+#AIC or AICc Calculation using the most saturated model
+#n/k < 40 use AICc
+#k=20
+#AIC ratio is 1414.077
+nrow(fish_filter)/13
+
+
+#Therefore, we will use AIC. 
+#The optimal (only) random effects structure is the saturated model.
+```
+
+STEP 3. CHOOSING FIXED EFFECTS 
+We now need to refit the saturated model (which has the optimal 
+random-effect structure with REML=true) as false and 
+compare different fixed-effect structures.
+
+```{r}
+#Full model with all fixed effects and their interactions
+
+# mixed_model_saturated <- lmer(logpredmass ~ Mean_PP_Standardized + 
+# Predator.lifestage + Type.of.feeding.interaction + Prey.mass.standardized + 
+#   Predator.lifestage:Type.of.feeding.interaction + 
+#   Predator.quality.of.length.mass.conversion + (1|Predator.common.name)+
+#   (1|Geographic.location),  data=fish_filter, REML=FALSE)
+
+ 
+#INTERACTIONS + SOME FIXED EFFECTS --------------------------------------------------------
+
+#No Mean_PP_Standardized
+mixed_model_interactions_no_PP<-lmer(logpredmass ~ Predator.lifestage
+                                     + Type.of.feeding.interaction +
+                                       Prey.mass.standardized + 
+                                       Predator.lifestage:Type.of.feeding.interaction + 
+                                       Predator.quality.of.length.mass.conversion + 
+                                       (1|Predator.common.name)+
+                                       (1|Geographic.location), 
+                                     data=fish_filter, REML=FALSE)
+
+
+#No Prey.mass.standardized 
+mixed_model_interactions_no_prey_mass<-
+  lmer(logpredmass ~ Mean_PP_Standardized + 
+Predator.lifestage + Type.of.feeding.interaction + 
+  Predator.lifestage:Type.of.feeding.interaction + 
+  Predator.quality.of.length.mass.conversion + (1|Prey.taxon) +
+  (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
+
+
+#COMBINATIONS OF NO INTERACTIONS -----------------------------------------------
+
+#No interaction
+mixed_model_no_interactions<-
+  lmer(logpredmass ~ Mean_PP_Standardized + Predator.lifestage + 
+         Type.of.feeding.interaction + Prey.mass.standardized +  
+         Predator.quality.of.length.mass.conversion + 
+         (1|Predator.common.name)+(1|Geographic.location),  
+       data=fish_filter, REML=FALSE)
+
+#No interactions or Mean_PP
+mixed_model_no_interactions_no_PP<-
+  lmer(logpredmass ~ Predator.lifestage + Type.of.feeding.interaction + 
+         Prey.mass.standardized +  
+         Predator.quality.of.length.mass.conversion + 
+         (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
+
+#No interactions or Predator.lifestage
+mixed_model_no_interactions_no_lifestage<-
+  lmer(logpredmass ~ Mean_PP_Standardized + Type.of.feeding.interaction + 
+         Prey.mass.standardized + 
+         Predator.quality.of.length.mass.conversion + 
+         (1|Predator.common.name)+(1|Geographic.location),  
+       data=fish_filter, REML=FALSE)
+
+#No interactions or type of feeding interaction
+mixed_model_no_interactions_no_feeding<-
+  lmer(logpredmass ~ Mean_PP_Standardized + Predator.lifestage + 
+         Prey.mass.standardized + Predator.quality.of.length.mass.conversion +
+         (1|Predator.common.name)+(1|Geographic.location),  data=fish_filter, REML=FALSE)
+
+#No interactions or Prey.mass.standardized
+mixed_model_no_interactions_no_preymass<-
+  lmer(logpredmass ~ Mean_PP_Standardized + Predator.lifestage + 
+         Type.of.feeding.interaction +
+         Predator.quality.of.length.mass.conversion  + 
+         (1|Predator.common.name)+(1|Geographic.location), 
+       data=fish_filter, REML=FALSE)
+
+#Testing fixed-effects models
+AIC(mixed_model_saturated, mixed_model_interactions_no_PP,
+    mixed_model_interactions_no_prey_mass, mixed_model_no_interactions,
+    mixed_model_no_interactions_no_PP, 
+    mixed_model_no_interactions_no_lifestage, 
+    mixed_model_no_interactions_no_feeding, 
+    mixed_model_no_interactions_no_preymass)
+
+#The top two models are 1) mixed_model_interactions_no_PP and 2) the saturated model.
+#We considered averaging the models, but given that there was a minimal difference in them
+#except for the presence of PP, which was not even a significant predictor in the model
+#that was present and upon graphing no trend was visible, we just stuck with
+#the mixed_model_interactions_no_PP model.
+summary(mixed_model_interactions_no_PP)
+summary(mixed_model_saturated)
+
+
+# load packages for html table model output
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+
+#Outputs a cleaned up version of the model.
+#tab_model(mixed_model_interactions_no_PP)
+
+```
+
+###PLOTTING
+
+```{r}
+#Predator mass by lifestage: as they get bigger, they get older
+ggplot(fish_filter, aes(x=Predator.lifestage, y=logpredmass))+
+  geom_boxplot()+
+  theme_bw()+scale_x_discrete(limits=c("Larva","Juvenile","Adult"))+
+  labs(y="Log (Predator mass)", x="Predator Lifestage")
+                                                           
+#ggsave("Lifestage_LogPredMass.jpg", plot = last_plot(), device = NULL, path = NULL,
+#  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+#  dpi = 300, limitsize = TRUE)
+
+```
+
+PLOTTING PRIMARY PRODUCTIVITY
+```{r}
+#Primary productivity is removed from the model. This is not unreasonable, given that there
+#is no obvious relationship when you plot the points: 
+#We do see that the shelf habitat shows considerable variation in 
+#predator mass for same mean primary productivity, 
+#suggesting a greater diversity in that environment. This relationship just isn't linear.
+
+library(scales)
+
+ggplot(fish_filter, aes(x=Mean_PP_Standardized, y=log10(Predator.mass), 
+                        colour=Specific.habitat))+
+  geom_boxplot(width=0.8)+theme_bw()+
+  labs(x="Mean Primary Productivity (Standardized)", 
+       y="log (Predator mass)", fill="Geographic Location")+
+  scale_x_continuous(labels=comma)
+
+#ggsave("MPP_LogPredMass.jpg", plot = last_plot(), device = NULL, path = NULL,
+#  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+#  dpi = 300, limitsize = TRUE)
+
+```
+PLOTTING PREY MASS
+
+```{r}
+#Prey mass significantly and positively predicts predator mass, but weakly.
+#This is reflected by the low coefficient of our model
+#Trend is primarily driven by Atlantic ocean fish
+#Removed outliers to make trend more obvious
+#Most slopes are positive
+
+ggplot(fish_filter, aes(x=Prey.mass.standardized,
+                        y=logpredmass, colour=Geographic.location))+
+  geom_point(alpha=0.3)+xlim(c(0,34))+ylim(0,6)+
+  theme_classic()+
+  labs(x="Prey mass (standardized)", y="Predator mass (log)")+
+  geom_smooth(method="lm", se=F)
+
+# ggsave("Prey_LogPredMass.jpg", plot = last_plot(), device = NULL, path = NULL,
+#   scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+#  dpi = 300, limitsize = TRUE)
+
+```
+
+PLOTTING FEEDING INTERACTION 
+
+```{r}
+
+ ggplot(fish_filter,aes(x=Type.of.feeding.interaction, y=logpredmass)) +
+  geom_boxplot()+
+  theme_classic() +labs(y="Log (Predator mass)",
+                        x="Predator Feeding Interaction")+
+                        scale_x_discrete(limits=c("Planktivorous","Piscivorous","Predacious"))         
+                                           
+
+# ggsave("FeedingInteraction_LogPredMass.jpg", plot = last_plot(), 
+#device = NULL, path = NULL,
+#   scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+#   dpi = 300, limitsize = TRUE)
+
+
+```
+PLOTTING THE INTERACTION BETWEEN LIFESTAGE AND FEEDING INTERACTION 
+
+```{r}
+fish_filter %>%
+filter(Predator.lifestage != "Larva", Type.of.feeding.interaction != "planktivorous") %>%
+group_by(Predator.lifestage, Type.of.feeding.interaction) %>%
+summarise(meanlogpredmass = mean(logpredmass), n_obs = n(),
+se_mass = (meanlogpredmass/sqrt(n_obs))) %>%
+ggplot()+
+aes(x = Predator.lifestage, y = meanlogpredmass, colour = Type.of.feeding.interaction)+
+geom_line(aes(group=Type.of.feeding.interaction))+
+geom_errorbar(aes(ymin = (meanlogpredmass-se_mass), ymax = (meanlogpredmass + se_mass)),
+width = 0.05)+
+geom_point()+
+labs(x = "Predator Lifestage", y = "Mean of Log Predator Mass",
+colour = "Type of Feeding Interaction")+
+scale_x_discrete(limits = c("Juvenile", "Adult"))+
+scale_colour_manual(values = c("midnightblue", "orangered"))+
+theme_classic()
+```
