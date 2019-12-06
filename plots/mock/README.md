@@ -1,4 +1,4 @@
-# Mock plots
+# Mock plots (for plots used in final report, see "Figures")
 
 1. Is there a relationship between predator size (mass and length) and prey size (mass and length)?
 
